@@ -1,13 +1,25 @@
 package pl.edu.pw.spdb;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import javafx.application.Application;
+import javafx.scene.Scene;
+import javafx.scene.control.Label;
+import javafx.scene.layout.StackPane;
+import javafx.stage.Stage;
 
-@SpringBootApplication
-public class SpdbApplication {
 
-    public static void main(String[] args) {
-        SpringApplication.run(SpdbApplication.class, args);
+public class SpdbApplication extends Application {
+
+    @Override
+    public void start(Stage stage) {
+        String javaVersion = System.getProperty("java.version");
+        String javafxVersion = System.getProperty("javafx.version");
+        Label l = new Label("Hello, JavaFX " + javafxVersion + ", running on Java " + javaVersion + ".");
+        Scene scene = new Scene(new StackPane(l), 640, 480);
+        stage.setScene(scene);
+        stage.show();
     }
 
+    public static void main(String[] args) {
+        launch();
+    }
 }
