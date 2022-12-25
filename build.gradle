@@ -18,7 +18,7 @@ configurations {
 
 javafx {
     version = "19"
-    modules = ['javafx.controls', "javafx.fxml"]
+    modules = ['javafx.controls', "javafx.fxml", "javafx.web"]
 }
 
 mainClassName = 'pl.edu.pw.spdb.SpdbApplication'
@@ -28,6 +28,7 @@ repositories {
 }
 
 dependencies {
+    implementation group: 'com.sothawo', name: 'mapjfx', version: '3.1.0'
     implementation 'org.springframework.boot:spring-boot-starter'
     compileOnly 'org.projectlombok:lombok'
     runtimeOnly 'org.postgresql:postgresql'
