@@ -1,0 +1,28 @@
+spring:
+  application:
+    ui:
+      title: "SPDB app"
+
+  sql:
+    init:
+      platform: postgres
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/osm
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+
+    hikari:
+      connection-test-query: SELECT * FROM ways LIMIT 1
+
+logging:
+  level:
+    root: DEBUG
+    org:
+      springframework:
+        boot:
+          autoconfigure: ERROR
+    com:
+      zaxxer:
+        hikari: DEBUG
