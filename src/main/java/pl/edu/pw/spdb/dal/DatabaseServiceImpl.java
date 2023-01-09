@@ -7,6 +7,12 @@ import pl.edu.pw.spdb.model.Point;
 import pl.edu.pw.spdb.model.Route;
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.postgis.*;
+
+import pl.edu.pw.spdb.model.RouteSegment;
 
 @Service
 @Slf4j
@@ -66,11 +72,7 @@ public class DatabaseServiceImpl implements DatabaseService {
     @Override
     public Route findRoute(Integer startId, Integer endId, Integer maxSpeed, float distanceWeight) {
         try (Connection connection = getConnection()) {
-            PreparedStatement statement = connection.prepareStatement(FIND_ROUTE_SQL);
-            statement.setInt(1, startId);
-            statement.setInt(2, endId);
-            statement.setInt(3, maxSpeed);
-            statement.setFloat(4, distanceWeight);
+            PreparedStatement statement = getStatement(startId, endId, maxSpeed, distanceWeight, connection);
 
             log.info(statement.toString());
 
@@ -84,8 +86,36 @@ public class DatabaseServiceImpl implements DatabaseService {
         }
     }
 
-    private Route parseQueryResult(ResultSet result) {
-        return null;
+    private static PreparedStatement getStatement(Integer startId, Integer endId, Integer maxSpeed, float distanceWeight, Connection connection) throws SQLException {
+        PreparedStatement statement = connection.prepareStatement(FIND_ROUTE_SQL);
+        statement.setInt(1, startId);
+        statement.setInt(2, endId);
+        statement.setInt(3, maxSpeed);
+        statement.setFloat(4, distanceWeight);
+        return statement;
+    }
+
+    private Route parseQueryResult(ResultSet result) throws SQLException {
+        List<RouteSegment> segments = new ArrayList<>();
+        while (result.next()) {
+            segments.add(parseRecord(result));
+        }
+        return new Route(segments, 0, 0);
+    }
+
+    private static RouteSegment parseRecord(ResultSet result) throws SQLException {
+        long id = result.getLong(1);
+        Object geom = result.getObject(2);
+        long source = result.getLong(3);
+        long target = result.getLong(4);
+        double length = result.getDouble(5);
+        double maxSpeedForward = result.getDouble(6);
+        double x1 = result.getDouble(8);
+        double y1 = result.getDouble(9);
+        double x2 = result.getDouble(10);
+        double y2 = result.getDouble(11);
+
+        return new RouteSegment(id, geom, source, target, length, maxSpeedForward, x1, y1, x2, y2);
     }
 
 }
