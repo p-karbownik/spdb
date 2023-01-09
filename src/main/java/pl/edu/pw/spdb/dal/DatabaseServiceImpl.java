@@ -5,14 +5,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import pl.edu.pw.spdb.model.Point;
 import pl.edu.pw.spdb.model.Route;
+import pl.edu.pw.spdb.model.RouteSegment;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.postgis.*;
-
-import pl.edu.pw.spdb.model.RouteSegment;
 
 @Service
 @Slf4j
@@ -34,7 +31,7 @@ public class DatabaseServiceImpl implements DatabaseService {
             "order by st_distance(st_makepoint(?,?), st_makepoint(y2,x2)) limit 1;";
 
     private static final String FIND_ROUTE_SQL =
-            "SELECT w.gid, w.the_geom, w.source, w.target, w.length, w.maxspeed_forward, " +
+            "SELECT w.gid, w.the_geom, w.source, w.target, w.length_m, w.maxspeed_forward, " +
                     "w.maxspeed_backward, w.x1, w.y1, w.x2, w.y2 " +
                     "FROM astar(?, ?, ?, ?, 0) res join ways w on res.edge=w.gid;";
 
@@ -70,7 +67,7 @@ public class DatabaseServiceImpl implements DatabaseService {
     }
 
     @Override
-    public Route findRoute(Integer startId, Integer endId, Integer maxSpeed, float distanceWeight) {
+    public Route findRoute(long startId, long endId, Integer maxSpeed, float distanceWeight) {
         try (Connection connection = getConnection()) {
             PreparedStatement statement = getStatement(startId, endId, maxSpeed, distanceWeight, connection);
 
@@ -78,7 +75,7 @@ public class DatabaseServiceImpl implements DatabaseService {
 
             ResultSet result = statement.executeQuery();
 
-            return parseQueryResult(result);
+            return parseQueryResult(result, maxSpeed);
 
         } catch (SQLException e) {
             log.error("SQLException has occurred with message: " + e.getMessage());
@@ -86,21 +83,26 @@ public class DatabaseServiceImpl implements DatabaseService {
         }
     }
 
-    private static PreparedStatement getStatement(Integer startId, Integer endId, Integer maxSpeed, float distanceWeight, Connection connection) throws SQLException {
+    private static PreparedStatement getStatement(long startId, long endId, Integer maxSpeed, float distanceWeight, Connection connection) throws SQLException {
         PreparedStatement statement = connection.prepareStatement(FIND_ROUTE_SQL);
-        statement.setInt(1, startId);
-        statement.setInt(2, endId);
+        statement.setLong(1, startId);
+        statement.setLong(2, endId);
         statement.setInt(3, maxSpeed);
         statement.setFloat(4, distanceWeight);
         return statement;
     }
 
-    private Route parseQueryResult(ResultSet result) throws SQLException {
+    private Route parseQueryResult(ResultSet result, int maxSpeed) throws SQLException {
         List<RouteSegment> segments = new ArrayList<>();
+        float distanceSum = 0;
+        float timeSum = 0;
         while (result.next()) {
-            segments.add(parseRecord(result));
+            RouteSegment seg = parseRecord(result);
+            distanceSum += seg.length();
+            timeSum += (seg.length() / (Math.min(seg.maxSpeedForward(), maxSpeed)));
+            segments.add(seg);
         }
-        return new Route(segments, 0, 0);
+        return new Route(segments, distanceSum, timeSum);
     }
 
     private static RouteSegment parseRecord(ResultSet result) throws SQLException {
@@ -115,7 +117,7 @@ public class DatabaseServiceImpl implements DatabaseService {
         double x2 = result.getDouble(10);
         double y2 = result.getDouble(11);
 
-        return new RouteSegment(id, geom, source, target, length, maxSpeedForward, x1, y1, x2, y2);
+        return new RouteSegment(id, geom, source, target, length/1000, maxSpeedForward, x1, y1, x2, y2);
     }
 
 }

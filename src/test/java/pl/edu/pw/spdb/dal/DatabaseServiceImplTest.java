@@ -47,10 +47,10 @@ public class DatabaseServiceImplTest {
     }
 
     @Test
-    public void findRoute() {
+    public void findRoute() {       // find route from Gdansk to Krakow
         // given
-        Integer startId = 1457211;
-        Integer endId = 3263579;
+        long startId = 1457211;
+        long endId = 3263579;
         int velocity = 200;
         float w = 1;
 
@@ -61,7 +61,10 @@ public class DatabaseServiceImplTest {
         assertNotNull("Route should not be null", r);
         assertNotNull("Route should contain not empty segment list", r.segments());
 
-        assertEquals("First segment should start with start point Id", r.segments().get(0).source(), (long) startId);
-        assertEquals("Last segment should end with end point Id", r.segments().get(r.segments().size() - 1).target(), (long) endId);
+        assertEquals("First segment should start with start point Id", startId, r.segments().get(0).source());
+        assertEquals("Last segment should end with end point Id", endId, r.segments().get(r.segments().size() - 1).target());
+
+        assertEquals("Distance should be around 551km", 551, (int) r.distance());
+        assertEquals("Time should be around 7h", 7, (int) r.estimatedTime());
     }
 }
