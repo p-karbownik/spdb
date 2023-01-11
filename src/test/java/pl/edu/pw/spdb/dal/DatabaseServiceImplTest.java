@@ -1,6 +1,5 @@
 package pl.edu.pw.spdb.dal;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,7 +8,8 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import pl.edu.pw.spdb.model.Point;
 import pl.edu.pw.spdb.model.Route;
 
-import static org.springframework.test.util.AssertionErrors.*;
+import static org.springframework.test.util.AssertionErrors.assertEquals;
+import static org.springframework.test.util.AssertionErrors.assertNotNull;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
@@ -26,7 +26,7 @@ public class DatabaseServiceImplTest {
         Point p = new Point(y, x);
 
         // when
-        Integer nearestStartId = service.getStartOrEnd(p, true);
+        Long nearestStartId = service.getStartOrEnd(p, true);
 
         // then
         assertEquals("Found different start point", 530709, nearestStartId);
@@ -40,7 +40,7 @@ public class DatabaseServiceImplTest {
         Point p = new Point(y, x);
 
         // when
-        Integer nearestEndId = service.getStartOrEnd(p, false);
+        Long nearestEndId = service.getStartOrEnd(p, false);
 
         // then
         assertEquals("Found different end point", 3130606, nearestEndId);
