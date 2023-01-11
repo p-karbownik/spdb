@@ -6,10 +6,15 @@ import com.sothawo.mapjfx.event.MapViewEvent;
 import com.sothawo.mapjfx.event.MarkerEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Label;
+import javafx.scene.control.RadioButton;
+import javafx.scene.control.Slider;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.paint.Color;
 import org.springframework.stereotype.Component;
 
 import java.net.URL;
+import java.util.Objects;
 import java.util.ResourceBundle;
 
 @Component
@@ -28,7 +33,14 @@ public class MainWindowController implements Initializable {
                     .setWidth(7)
                     .setClosed(true)
                     .setFillColor(Color.web("lawngreen", 0.5));
+    private final ToggleGroup radioButtonsGroup = new ToggleGroup();
 
+    @FXML
+    private Label costParameterLabel;
+    @FXML
+    private Slider optionsSlider;
+    @FXML
+    private RadioButton shortestPathRadioButton, shortestTimeRadioButton, advancedRadioButton;
     private Marker marker;
     private MapCircle circle;
     private MapLabel mapLabel;
@@ -39,6 +51,9 @@ public class MainWindowController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        initializeRadioButtons();
+        initializeOptionsSlider();
+
         marker = Marker.createProvided(Marker.Provided.BLUE)
                 .setPosition(pkinCoordinate)
                 .setRotation(90)
@@ -162,7 +177,7 @@ public class MainWindowController implements Initializable {
             event.consume();
         });
 
-         mapView.initializedProperty().addListener((observable, oldValue, newValue) -> {
+        mapView.initializedProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue) {
                 // a map is only displayed when an initial coordinate is set
                 mapView.setCenter(pkinCoordinate);
@@ -171,28 +186,64 @@ public class MainWindowController implements Initializable {
 
                 // add two markers without keeping a ref to them, they should disappear from the map when gc'ed
                 mapView.addMarker(Marker.createProvided(Marker.Provided.GREEN).setPosition(pkinCoordinate)
-                    .setVisible(true));
+                        .setVisible(true));
                 mapView.addMarker(
-                    Marker.createProvided(Marker.Provided.ORANGE).setPosition(warsawSpireCoordinate).setVisible(
-                        true));
+                        Marker.createProvided(Marker.Provided.ORANGE).setPosition(warsawSpireCoordinate).setVisible(
+                                true));
 
                 // add a coordinate line to be gc'ed
                 mapView.addCoordinateLine(
-                    new CoordinateLine(pkinCoordinate, warsawSpireCoordinate, royalCastleCoordinate)
-                        .setVisible(true)
-                        .setColor(Color.FUCHSIA).setWidth(5));
+                        new CoordinateLine(pkinCoordinate, warsawSpireCoordinate, royalCastleCoordinate)
+                                .setVisible(true)
+                                .setColor(Color.FUCHSIA).setWidth(5));
 
                 // add a label to be gc'ed
                 mapView.addLabel(new MapLabel("clean me up").setPosition(warsawSpireCoordinate)
-                    .setVisible(true));
+                        .setVisible(true));
 
                 // add normal circle and a circle to be gc'ed
                 mapView.addMapCircle(circle);
                 mapView.addMapCircle(new MapCircle(pkinCoordinate, 100).setVisible(true));
             }
         });
-         mapView.setMapType(MapType.OSM);
-         mapView.initialize(Configuration.builder()
-            .build());
+        mapView.setMapType(MapType.OSM);
+        mapView.initialize(Configuration.builder()
+                .build());
     }
+
+    private void initializeRadioButtons() {
+        shortestPathRadioButton.setToggleGroup(radioButtonsGroup);
+        shortestTimeRadioButton.setToggleGroup(radioButtonsGroup);
+        advancedRadioButton.setToggleGroup(radioButtonsGroup);
+
+        radioButtonsGroup.selectedToggleProperty().addListener((observable, oldValue, newValue) -> {
+            if (!Objects.equals(oldValue, newValue)) {
+                if (newValue == shortestPathRadioButton) {
+                    costParameterLabel.setText(String.valueOf(1));
+                } else if (newValue == shortestTimeRadioButton) {
+                    costParameterLabel.setText(String.valueOf(0));
+                } else {
+                    costParameterLabel.setText(String.format("%.2f", optionsSlider.getValue()));
+                }
+            }
+        });
+
+        shortestPathRadioButton.setSelected(true);
+    }
+
+    private void initializeOptionsSlider() {
+        optionsSlider.setMin(0);
+        optionsSlider.setMax(1);
+        optionsSlider.setMajorTickUnit(0.5f);
+        optionsSlider.setShowTickMarks(true);
+        optionsSlider.setShowTickLabels(true);
+        optionsSlider.setBlockIncrement(0.1f);
+
+        optionsSlider.disableProperty().
+                bind(radioButtonsGroup.selectedToggleProperty().isNotEqualTo(advancedRadioButton));
+
+        optionsSlider.valueProperty().addListener((observable, oldValue, newValue) ->
+                costParameterLabel.setText(String.format("%.2f", optionsSlider.getValue())));
+    }
+
 }
