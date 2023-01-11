@@ -86,6 +86,7 @@ public class MainWindowController implements Initializable {
         resultListView.setCellFactory(x -> new ListCell<>() {
             @Override
             protected void updateItem(Pair<String, CoordinateLine> item, boolean empty) {
+                super.updateItem(item, empty);
                 if (empty || item == null) {
                     setText("");
                 } else {
@@ -475,12 +476,14 @@ public class MainWindowController implements Initializable {
 
         if (selectedItem != null) {
             cleanMapView();
-            mapView.addCoordinateLine(selectedItem.getValue()
-                    .setVisible(true)
-                    .setColor(Color.DODGERBLUE)
-                    .setWidth(7)
-                    .setClosed(true)
-                    .setFillColor(Color.web("lawngreen", 0.5)));
+            Platform.runLater(() -> {
+                mapView.addCoordinateLine(selectedItem.getValue()
+                        .setVisible(true)
+                        .setColor(Color.DODGERBLUE)
+                        .setWidth(7)
+                        .setClosed(true)
+                        .setFillColor(Color.web("lawngreen", 0.5)));
+            });
         }
     }
 }

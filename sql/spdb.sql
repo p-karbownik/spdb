@@ -12,8 +12,8 @@ CREATE OR REPLACE FUNCTION astar(start_id BIGINT, end_id BIGINT, v int, w double
             SELECT * FROM pgr_astar('SELECT gid AS id,
                          source::integer,
                          target::integer,
-                         sign(cost)*length*('||w||'+((1-'||w||')/(least(maxspeed_forward,'||v||'))))::double precision AS cost,
-                         sign(reverse_cost)*length*('||w||'+((1-'||w||')/(least(maxspeed_backward,'||v||'))))::double precision AS reverse_cost,
+                         sign(cost)*length_m*('||w||'+((1-'||w||')/(least(maxspeed_forward,'||v||'))))::double precision AS cost,
+                         sign(reverse_cost)*length_m*('||w||'+((1-'||w||')/(least(maxspeed_backward,'||v||'))))::double precision AS reverse_cost,
                          x1, y1, x2, y2
                          FROM ways WHERE tag_id != 114', start_id, end_id, true, heur);
     END; $$
