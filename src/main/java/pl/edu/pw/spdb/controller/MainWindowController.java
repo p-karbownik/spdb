@@ -4,12 +4,11 @@ import com.sothawo.mapjfx.*;
 import com.sothawo.mapjfx.event.MapLabelEvent;
 import com.sothawo.mapjfx.event.MapViewEvent;
 import com.sothawo.mapjfx.event.MarkerEvent;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Label;
-import javafx.scene.control.RadioButton;
-import javafx.scene.control.Slider;
-import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.*;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import org.springframework.stereotype.Component;
 
@@ -35,12 +34,23 @@ public class MainWindowController implements Initializable {
                     .setFillColor(Color.web("lawngreen", 0.5));
     private final ToggleGroup radioButtonsGroup = new ToggleGroup();
 
+    private MapViewState mapViewState = MapViewState.DEFAUlT;
+
     @FXML
-    private Label costParameterLabel;
+    private Button chooseStartPointButton, chooseEndPointButton;
+    @FXML
+    private Label costParameterLabel, applicationStateLabel;
+
+    @FXML
+    private TextField startPointCoordinatesTextField, endPointCoordinatesTextField;
     @FXML
     private Slider optionsSlider;
     @FXML
     private RadioButton shortestPathRadioButton, shortestTimeRadioButton, advancedRadioButton;
+
+    private Marker startPointMarker;
+
+    private Marker endPointMarker;
     private Marker marker;
     private MapCircle circle;
     private MapLabel mapLabel;
@@ -51,8 +61,58 @@ public class MainWindowController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        applicationStateLabel.setText("");
         initializeRadioButtons();
         initializeOptionsSlider();
+        initializeMapView();
+        initializeButtons();
+    }
+
+    private void initializeButtons() {
+        chooseStartPointButton.setOnMouseClicked(this::handleChooseStartPointButtonClicked);
+        chooseEndPointButton.setOnMouseClicked(this::handleChooseEndPointButtonClicked);
+    }
+
+    private void initializeRadioButtons() {
+        shortestPathRadioButton.setToggleGroup(radioButtonsGroup);
+        shortestTimeRadioButton.setToggleGroup(radioButtonsGroup);
+        advancedRadioButton.setToggleGroup(radioButtonsGroup);
+
+        radioButtonsGroup.selectedToggleProperty().addListener((observable, oldValue, newValue) -> {
+            if (!Objects.equals(oldValue, newValue)) {
+                if (newValue == shortestPathRadioButton) {
+                    costParameterLabel.setText(String.valueOf(1));
+                } else if (newValue == shortestTimeRadioButton) {
+                    costParameterLabel.setText(String.valueOf(0));
+                } else {
+                    costParameterLabel.setText(String.format("%.2f", optionsSlider.getValue()));
+                }
+            }
+        });
+
+        shortestPathRadioButton.setSelected(true);
+    }
+
+    private void initializeOptionsSlider() {
+        optionsSlider.setMin(0);
+        optionsSlider.setMax(1);
+        optionsSlider.setMajorTickUnit(0.5f);
+        optionsSlider.setShowTickMarks(true);
+        optionsSlider.setShowTickLabels(true);
+        optionsSlider.setBlockIncrement(0.1f);
+
+        optionsSlider.disableProperty().
+                bind(radioButtonsGroup.selectedToggleProperty().isNotEqualTo(advancedRadioButton));
+
+        optionsSlider.valueProperty().addListener((observable, oldValue, newValue) ->
+                costParameterLabel.setText(String.format("%.2f", optionsSlider.getValue())));
+    }
+
+    private void initializeMapView() {
+        startPointMarker = Marker.createProvided(Marker.Provided.GREEN)
+                .setVisible(false);
+        endPointMarker = Marker.createProvided(Marker.Provided.RED)
+                .setVisible(false);
 
         marker = Marker.createProvided(Marker.Provided.BLUE)
                 .setPosition(pkinCoordinate)
@@ -85,7 +145,7 @@ public class MainWindowController implements Initializable {
         mapView.setXYZParam(xyzParam);
 
         // listen to MapViewEvent MAP_CLICKED
-        mapView.addEventHandler(MapViewEvent.MAP_CLICKED, event -> {
+        /*mapView.addEventHandler(MapViewEvent.MAP_CLICKED, event -> {
             event.consume();
             if (marker.getVisible()) {
                 marker.setPosition(event.getCoordinate());
@@ -93,7 +153,7 @@ public class MainWindowController implements Initializable {
             if (mapLabel.getVisible()) {
                 mapLabel.setPosition(event.getCoordinate());
             }
-        });
+        });*/
 
         // listen to MapViewEvent MAP_RIGHTCLICKED
         mapView.addEventHandler(MapViewEvent.MAP_RIGHTCLICKED, event -> {
@@ -152,8 +212,12 @@ public class MainWindowController implements Initializable {
         });
         // listen to MAPLABEL_CLICKED event.
         mapView.addEventHandler(MapLabelEvent.MAPLABEL_CLICKED, event -> {
+
             event.consume();
         });
+
+        mapView.addEventHandler(MapViewEvent.MAP_CLICKED, this::handleClickOnMapView);
+
         // listen to MAPLABEL_RIGHTCLICKED event.
         mapView.addEventHandler(MapLabelEvent.MAPLABEL_RIGHTCLICKED, event -> {
             event.consume();
@@ -177,12 +241,14 @@ public class MainWindowController implements Initializable {
             event.consume();
         });
 
+        mapView.setCenter(pkinCoordinate);
+
         mapView.initializedProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue) {
+                /*
                 // a map is only displayed when an initial coordinate is set
-                mapView.setCenter(pkinCoordinate);
                 mapView.setExtent(extentAll);
-//                mapView.setZoom(0);
+                mapView.setZoom(28);
 
                 // add two markers without keeping a ref to them, they should disappear from the map when gc'ed
                 mapView.addMarker(Marker.createProvided(Marker.Provided.GREEN).setPosition(pkinCoordinate)
@@ -203,7 +269,7 @@ public class MainWindowController implements Initializable {
 
                 // add normal circle and a circle to be gc'ed
                 mapView.addMapCircle(circle);
-                mapView.addMapCircle(new MapCircle(pkinCoordinate, 100).setVisible(true));
+                mapView.addMapCircle(new MapCircle(pkinCoordinate, 100).setVisible(true));*/
             }
         });
         mapView.setMapType(MapType.OSM);
@@ -211,39 +277,72 @@ public class MainWindowController implements Initializable {
                 .build());
     }
 
-    private void initializeRadioButtons() {
-        shortestPathRadioButton.setToggleGroup(radioButtonsGroup);
-        shortestTimeRadioButton.setToggleGroup(radioButtonsGroup);
-        advancedRadioButton.setToggleGroup(radioButtonsGroup);
+    private void handleChooseStartPointButtonClicked(MouseEvent e) {
+        if (mapViewState != MapViewState.CHOOSING_START_POINT) {
+            mapViewState = MapViewState.CHOOSING_START_POINT;
+        } else {
+            mapViewState = MapViewState.DEFAUlT;
+        }
+        changeApplicationStateLabel();
+    }
 
-        radioButtonsGroup.selectedToggleProperty().addListener((observable, oldValue, newValue) -> {
-            if (!Objects.equals(oldValue, newValue)) {
-                if (newValue == shortestPathRadioButton) {
-                    costParameterLabel.setText(String.valueOf(1));
-                } else if (newValue == shortestTimeRadioButton) {
-                    costParameterLabel.setText(String.valueOf(0));
-                } else {
-                    costParameterLabel.setText(String.format("%.2f", optionsSlider.getValue()));
-                }
+    private void handleChooseEndPointButtonClicked(MouseEvent e) {
+        if (mapViewState != MapViewState.CHOOSING_END_POINT) {
+            mapViewState = MapViewState.CHOOSING_END_POINT;
+        } else {
+            mapViewState = MapViewState.DEFAUlT;
+        }
+        changeApplicationStateLabel();
+    }
+
+    private void changeApplicationStateLabel() {
+
+        String applicationState = "";
+
+        switch (mapViewState) {
+            case DEFAUlT -> applicationState = "";
+            case CHOOSING_END_POINT -> applicationState = "Wybór punktu końcowego";
+            case CHOOSING_START_POINT -> applicationState = "Wybór punktu startowego";
+        }
+
+        String finalApplicationState = applicationState;
+        Platform.runLater(() -> applicationStateLabel.setText(finalApplicationState));
+    }
+
+    private String getCoordinatesString(Coordinate coordinate) {
+        return String.format("%.6f", coordinate.getLongitude()) +
+                ", " +
+                String.format("%.6f",coordinate.getLatitude());
+    }
+
+    private void handleClickOnMapView(MapViewEvent event) {
+        switch (mapViewState) {
+            case CHOOSING_END_POINT -> {
+                endPointMarker.setPosition(event.getCoordinate())
+                        .setVisible(true);
+                Platform.runLater(() -> {
+                            mapView.addMarker(endPointMarker);
+                            endPointCoordinatesTextField.setText(getCoordinatesString(endPointMarker.getPosition()));
+                        }
+                );
+
+                mapViewState = MapViewState.DEFAUlT;
             }
-        });
 
-        shortestPathRadioButton.setSelected(true);
+            case CHOOSING_START_POINT -> {
+                startPointMarker.setPosition(event.getCoordinate())
+                        .setVisible(true);
+                Platform.runLater(() -> {
+                            mapView.addMarker(startPointMarker);
+                            startPointCoordinatesTextField.setText(getCoordinatesString(startPointMarker.getPosition()));
+                        }
+                );
+
+                mapViewState = MapViewState.DEFAUlT;
+            }
+            default -> {
+            }
+        }
+        changeApplicationStateLabel();
     }
-
-    private void initializeOptionsSlider() {
-        optionsSlider.setMin(0);
-        optionsSlider.setMax(1);
-        optionsSlider.setMajorTickUnit(0.5f);
-        optionsSlider.setShowTickMarks(true);
-        optionsSlider.setShowTickLabels(true);
-        optionsSlider.setBlockIncrement(0.1f);
-
-        optionsSlider.disableProperty().
-                bind(radioButtonsGroup.selectedToggleProperty().isNotEqualTo(advancedRadioButton));
-
-        optionsSlider.valueProperty().addListener((observable, oldValue, newValue) ->
-                costParameterLabel.setText(String.format("%.2f", optionsSlider.getValue())));
-    }
-
 }
