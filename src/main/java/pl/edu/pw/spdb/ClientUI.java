@@ -6,6 +6,7 @@ import javafx.stage.Stage;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ConfigurableApplicationContext;
+import pl.edu.pw.spdb.controller.MainWindowController;
 
 public class ClientUI extends Application {
 
@@ -23,6 +24,8 @@ public class ClientUI extends Application {
 
     @Override
     public void stop() {
+        ((MainWindowController) applicationContext.getBean("mainWindowController"))
+                .clearResources();
         applicationContext.stop();
         Platform.exit();
     }

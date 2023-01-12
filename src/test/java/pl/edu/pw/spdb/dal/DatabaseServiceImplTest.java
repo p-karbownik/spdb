@@ -59,12 +59,12 @@ public class DatabaseServiceImplTest {
 
         // then
         assertNotNull("Route should not be null", r);
-        assertNotNull("Route should contain not empty segment list", r.segments());
+        assertNotNull("Route should contain not empty segment list", r.getSegments());
 
-        assertEquals("First segment should start with start point Id", startId, r.segments().get(0).source());
-        assertEquals("Last segment should end with end point Id", endId, r.segments().get(r.segments().size() - 1).target());
+        assertEquals("First segment should start with start point Id", startId, r.getSegments().get(0).source());
+        assertEquals("Last segment should end with end point Id", endId, r.getSegments().get(r.getSegments().size() - 1).target());
 
-        assertEquals("Distance should be around 551km", 551, (int) r.distance());
-        assertEquals("Time should be around 7h", 7, (int) r.estimatedTime());
+        assertEquals("Distance should be around 551km", 551, (int) r.getDistance());
+        assertEquals("Time should be around 7h", 7, (int) r.getEstimatedTime());
     }
 }

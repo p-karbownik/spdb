@@ -1,7 +1,6 @@
 package pl.edu.pw.spdb.service;
 
 import com.sothawo.mapjfx.Coordinate;
-import com.sothawo.mapjfx.CoordinateLine;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 import pl.edu.pw.spdb.dal.DatabaseService;
@@ -17,16 +16,14 @@ public class SearchPathService {
         this.databaseService = databaseService;
     }
 
-    public CoordinateLine findRoute(@NotNull Coordinate startPointCoordinate, Coordinate endPointCoordinate,
-                                    int maxSpeed, double costParameter) throws RuntimeException {
+    public Route findRoute(@NotNull Coordinate startPointCoordinate, Coordinate endPointCoordinate,
+                           int maxSpeed, double costParameter) throws RuntimeException {
         Point startPoint = new Point(startPointCoordinate.getLatitude(), startPointCoordinate.getLongitude());
         Point endPoint = new Point(endPointCoordinate.getLatitude(), endPointCoordinate.getLongitude());
 
         long startPointId = databaseService.getStartOrEnd(startPoint, true);
         long endPointId = databaseService.getStartOrEnd(endPoint, false);
 
-        Route route = databaseService.findRoute(startPointId, endPointId, maxSpeed, (float) costParameter);
-
-        return route.getCoordinateLine();
+        return databaseService.findRoute(startPointId, endPointId, maxSpeed, (float) costParameter);
     }
 }

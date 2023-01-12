@@ -103,6 +103,7 @@ public class DatabaseServiceImpl implements DatabaseService {
 
     private Route parseQueryResult(ResultSet result, int maxSpeed) throws SQLException {
         List<RouteSegment> segments = new ArrayList<>();
+
         float distanceSum = 0;
         float timeSum = 0;
         while (result.next()) {
@@ -111,6 +112,7 @@ public class DatabaseServiceImpl implements DatabaseService {
             timeSum += (seg.length() / (Math.min(seg.maxSpeedForward(), maxSpeed)));
             segments.add(seg);
         }
+        log.info("Segments number: " + segments.size());
         return new Route(segments, distanceSum, timeSum);
     }
 
