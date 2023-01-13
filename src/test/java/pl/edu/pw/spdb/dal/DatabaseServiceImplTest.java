@@ -1,6 +1,5 @@
 package pl.edu.pw.spdb.dal;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,7 +8,8 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import pl.edu.pw.spdb.model.Point;
 import pl.edu.pw.spdb.model.Route;
 
-import static org.springframework.test.util.AssertionErrors.*;
+import static org.springframework.test.util.AssertionErrors.assertEquals;
+import static org.springframework.test.util.AssertionErrors.assertNotNull;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
@@ -26,7 +26,7 @@ public class DatabaseServiceImplTest {
         Point p = new Point(y, x);
 
         // when
-        Integer nearestStartId = service.getStartOrEnd(p, true);
+        Long nearestStartId = service.getStartOrEnd(p, true);
 
         // then
         assertEquals("Found different start point", 530709, nearestStartId);
@@ -40,7 +40,7 @@ public class DatabaseServiceImplTest {
         Point p = new Point(y, x);
 
         // when
-        Integer nearestEndId = service.getStartOrEnd(p, false);
+        Long nearestEndId = service.getStartOrEnd(p, false);
 
         // then
         assertEquals("Found different end point", 3130606, nearestEndId);
@@ -59,12 +59,12 @@ public class DatabaseServiceImplTest {
 
         // then
         assertNotNull("Route should not be null", r);
-        assertNotNull("Route should contain not empty segment list", r.segments());
+        assertNotNull("Route should contain not empty segment list", r.getSegments());
 
-        assertEquals("First segment should start with start point Id", startId, r.segments().get(0).source());
-        assertEquals("Last segment should end with end point Id", endId, r.segments().get(r.segments().size() - 1).target());
+        assertEquals("First segment should start with start point Id", startId, r.getSegments().get(0).source());
+        assertEquals("Last segment should end with end point Id", endId, r.getSegments().get(r.getSegments().size() - 1).target());
 
-        assertEquals("Distance should be around 551km", 551, (int) r.distance());
-        assertEquals("Time should be around 7h", 7, (int) r.estimatedTime());
+        assertEquals("Distance should be around 551km", 551, (int) r.getDistance());
+        assertEquals("Time should be around 7h", 7, (int) r.getEstimatedTime());
     }
 }
