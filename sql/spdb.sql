@@ -1,3 +1,14 @@
+CREATE OR REPLACE FUNCTION handle_speed_equal_zero(speed double precision)
+    RETURNS double precision as
+$$
+BEGIN
+    IF speed = 0::double precision then return 0.00001::double precision;
+    else return speed;
+    end if;
+end;
+$$
+    language plpgsql;
+
 CREATE OR REPLACE FUNCTION astar(start_id BIGINT, end_id BIGINT, v int, w double precision, heur int)
      RETURNS TABLE(
          seq INT,
@@ -12,10 +23,10 @@ CREATE OR REPLACE FUNCTION astar(start_id BIGINT, end_id BIGINT, v int, w double
             SELECT * FROM pgr_astar('SELECT gid AS id,
                          source::integer,
                          target::integer,
-                         sign(cost)*length_m*('||w||'+((1-'||w||')/(least(maxspeed_forward,'||v||'))))::double precision AS cost,
-                         sign(reverse_cost)*length_m*('||w||'+((1-'||w||')/(least(maxspeed_backward,'||v||'))))::double precision AS reverse_cost,
+                         sign(cost)*ST_LENGTH(the_geom)*('||w||'+((1-'||w||')/(least(maxspeed_forward,'||v||'))))::double precision AS cost,
+                         sign(reverse_cost)*ST_LENGTH(the_geom)*('||w||'+((1-'||w||')/(least(handle_speed_equal_zero(maxspeed_backward),'||v||'))))::double precision AS reverse_cost,
                          x1, y1, x2, y2
-                         FROM ways WHERE tag_id != 114', start_id, end_id, true, heur);
+                         FROM ways', start_id, end_id, true, heur);
     END; $$
     LANGUAGE plpgsql;
 
