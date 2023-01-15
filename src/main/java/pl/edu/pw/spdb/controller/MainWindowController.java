@@ -23,7 +23,6 @@ import org.springframework.stereotype.Component;
 import pl.edu.pw.spdb.model.Route;
 import pl.edu.pw.spdb.service.SearchPathService;
 
-import java.math.BigDecimal;
 import java.net.URL;
 import java.util.Objects;
 import java.util.ResourceBundle;
@@ -31,6 +30,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+/***
+ * Klasa reprezentująca kontroler okna aplikacji
+ */
 @Component
 public class MainWindowController implements Initializable {
     private final Coordinate pkinCoordinate = new Coordinate(52.231667, 21.006389);
@@ -62,6 +64,17 @@ public class MainWindowController implements Initializable {
         this.searchPathService = searchPathService;
     }
 
+    /***
+     * Metoda dostarczana przez bibliotekę JavaFX
+     * Służy do inicjalizacji widoku aplikacji
+     * @param location
+     * The location used to resolve relative paths for the root object, or
+     * {@code null} if the location is not known.
+     *
+     * @param resources
+     * The resources used to localize the root object, or {@code null} if
+     * the root object was not localized.
+     */
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         applicationStateLabel.setText("");
@@ -83,6 +96,9 @@ public class MainWindowController implements Initializable {
         });
     }
 
+    /***
+     * Metoda inicjalizująca przyciski
+     */
     private void initializeButtons() {
         chooseStartPointButton.setOnMouseClicked(this::handleChooseStartPointButtonClicked);
         chooseEndPointButton.setOnMouseClicked(this::handleChooseEndPointButtonClicked);
@@ -91,6 +107,9 @@ public class MainWindowController implements Initializable {
         cleanMapViewButton.setOnMouseClicked(this::handleCleanMapViewButton);
     }
 
+    /***
+     * Metoda inicjalizująca przyciski do przełączania parametru kosztu
+     */
     private void initializeRadioButtons() {
         shortestPathRadioButton.setToggleGroup(radioButtonsGroup);
         shortestTimeRadioButton.setToggleGroup(radioButtonsGroup);
@@ -111,6 +130,9 @@ public class MainWindowController implements Initializable {
         shortestPathRadioButton.setSelected(true);
     }
 
+    /***
+     * Metoda inicjalizująca suwak wyboru wartości kosztu
+     */
     private void initializeOptionsSlider() {
         optionsSlider.setMin(0);
         optionsSlider.setMax(1);
@@ -124,6 +146,9 @@ public class MainWindowController implements Initializable {
         optionsSlider.valueProperty().addListener((observable, oldValue, newValue) -> costParameterLabel.setText(String.format("%.2f", optionsSlider.getValue())));
     }
 
+    /***
+     * Metoda inicjalizująca kontorlkę mapView oraz markery reprezentujące punkt początkowy i końcowy
+     */
     private void initializeMapView() {
         startPointMarker = Marker.createProvided(Marker.Provided.GREEN).setVisible(false);
         endPointMarker = Marker.createProvided(Marker.Provided.RED).setVisible(false);
@@ -162,6 +187,10 @@ public class MainWindowController implements Initializable {
         mapView.initialize(Configuration.builder().build());
     }
 
+    /***
+     * Metoda obsługi zdarzenia kliknięcia przycisku Wybierz z mapy dla punktu początkowego
+     * @param e - obiekt reprezentujący zdarzenie
+     */
     private void handleChooseStartPointButtonClicked(MouseEvent e) {
         if (mapViewState != MapViewState.CHOOSING_START_POINT) {
             if (mapViewState == MapViewState.SHOWING_ROUTE) {
@@ -174,6 +203,10 @@ public class MainWindowController implements Initializable {
         changeApplicationStateLabel();
     }
 
+    /***
+     * Metoda obsługi zdarzenia kliknięcia przycisku Wybierz z mapy dla punktu końcowego
+     * @param e - obiekt reprezentujący zdarzenie
+     */
     private void handleChooseEndPointButtonClicked(MouseEvent e) {
         if (mapViewState != MapViewState.CHOOSING_END_POINT) {
             if (mapViewState == MapViewState.SHOWING_ROUTE) {
@@ -186,6 +219,9 @@ public class MainWindowController implements Initializable {
         changeApplicationStateLabel();
     }
 
+    /***
+     * Metoda zmieniająca etykietę z informacją o stanie aplikacji
+     */
     private void changeApplicationStateLabel() {
 
         String applicationState = "";
@@ -200,6 +236,10 @@ public class MainWindowController implements Initializable {
         Platform.runLater(() -> applicationStateLabel.setText(finalApplicationState));
     }
 
+    /***
+     * Metoda inicjalizująca pola tekstowe
+     * Ustawione jest tu wiązanie między właściwością reprezentującą zawartość pól, a funkcją walidującą
+     */
     private void initializeTextFields() {
         v1TextField.focusedProperty().addListener((observable, oldValue, newValue) -> {
             if (!newValue) {
@@ -218,16 +258,30 @@ public class MainWindowController implements Initializable {
         });
     }
 
+    /***
+     * Metoda walidująca poprawność danych w polu tekstowym z prędkością
+     * @param textField - obiekt reprezentujący pole tekstowe
+     */
     private void validateSpeedTextField(TextField textField) {
         if (!textField.getText().matches("^[0-9]+$")) {
             textField.setText("");
         }
     }
 
+    /***
+     * Metoda mapująca koordynat na string
+     * @param coordinate - współrzedne
+     * @return ciąg znaków reprezentujący współrzędne
+     */
     private String getCoordinatesString(Coordinate coordinate) {
         return String.format("%.6f", coordinate.getLongitude()) + ", " + String.format("%.6f", coordinate.getLatitude());
     }
 
+    /***
+     * Metoda usuwająca zdarzenie kliknięcia na kontrolkę MapView.
+     * Służy do zaznaczania pinezką punktu początkowego i końcowego
+     * @param event - zdarzenie naciśnięcia myszką na kontrolkę mapView
+     */
     private void handleClickOnMapView(MapViewEvent event) {
         switch (mapViewState) {
             case CHOOSING_END_POINT -> {
@@ -255,12 +309,19 @@ public class MainWindowController implements Initializable {
         changeApplicationStateLabel();
     }
 
+
+    /***
+     * Metoda usuwająca linie z kontrolki MapView
+     */
     private void cleanCoordinateLinesFromMapView() {
         for (var element : resultListView.getItems()) {
             mapView.removeCoordinateLine(element.getValue().getCoordinateLine());
         }
     }
 
+    /***
+     * Metoda usuwająca markery z kontrolki MapView oraz czyszcząca pola tekstowe ze współrzędnymi
+     */
     private void cleanMapView() {
         mapView.removeMarker(startPointMarker);
         mapView.removeMarker(endPointMarker);
@@ -269,6 +330,10 @@ public class MainWindowController implements Initializable {
         cleanCoordinateLinesFromMapView();
     }
 
+    /***
+     * Metoda obsługująca zdarzenie naciśnięcia przycisku Szukaj
+     * @param event - zdarzenie myszki
+     */
     private void handleSearchButtonClicked(MouseEvent event) {
         if (startPointCoordinatesTextField.getText().isBlank() || endPointCoordinatesTextField.getText().isBlank()) {
             createAlert("Błąd", "Brak współrzędnych", "Podaj punkt początkowy i końcowy w prawidłowy sposób").showAndWait();
@@ -293,6 +358,11 @@ public class MainWindowController implements Initializable {
         }
     }
 
+    /***
+     * Metoda przygotowująca zadany task wyszukiwania ścieżki.
+     * Definiuje zachowanie aplikacji podczas wykonywania się kodu, w przypadku niepowodzenia oraz sukcesu.
+     * @param task - zadanie wyszukiwania ścieżki
+     */
     private void prepareTask(SearchRouteTask task) {
         Stage dialog = new Stage();
         dialog.setWidth(300);
@@ -329,6 +399,10 @@ public class MainWindowController implements Initializable {
         });
     }
 
+    /***
+     * Metoda obsługująca zdarzenie naciśnięcia przycisku Wyczyść mapę
+     * @param event - zdarzenie myszki
+     */
     private void handleCleanMapViewButton(MouseEvent event) {
         Platform.runLater(() -> {
             cleanMapView();
@@ -336,7 +410,12 @@ public class MainWindowController implements Initializable {
             changeApplicationStateLabel();
         });
     }
-
+    /***
+     * Metoda pomocnicza tworząca okno pop-up
+     * @param title - treść tytułu okna
+     * @param headerText - treść nagłówka okna
+     * @param contentText - treść ciała alert
+     */
     private Alert createAlert(String title, String headerText, String contentText) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle(title);
@@ -345,14 +424,22 @@ public class MainWindowController implements Initializable {
         return alert;
     }
 
+    /***
+     * Metoda zwracająca ciąg znaków reprezentujący zadany czas
+     * @param time - czas
+     */
     private String getEstimatedTimeString(double time) {
         int hours = (int) time;
-        double minutesD = (time - hours) * 60 ;
+        double minutesD = (time - hours) * 60;
         int minutes = (int) minutesD;
 
         return hours + "godzin " + minutes + "minut";
     }
 
+    /***
+     * Metoda obsługująca wyświetlanie szczegółów o trasie
+     * @param route - znalezione droga
+     */
     private void showRouteDetails(Route route) {
         String text;
 
@@ -366,6 +453,10 @@ public class MainWindowController implements Initializable {
         applicationStateLabel.setText(text);
     }
 
+    /***
+     * Metoda obsługująca zdarzenia naciśnięcia przycisku Pokaż wynik
+     * @param mouseEvent - zdarzenie myszki
+     */
     private void handleShowResultButtonClicked(MouseEvent mouseEvent) {
         var selectedItem = resultListView.getSelectionModel().getSelectedItem();
         if (selectedItem != null) {
@@ -383,11 +474,18 @@ public class MainWindowController implements Initializable {
         }
     }
 
+    /***
+     * Metoda czyszcząca zasoby kontrolki MapView przy zamknięciu aplikacji.
+     */
     public void clearResources() {
         cleanMapView();
         mapView.close();
     }
 
+    /***
+     * Klasa implementująca wywołanie wyszukiwania najlepszej drogi.
+     * Służy do uruchomienia zadania w osobnym wątku.
+     */
     private class SearchRouteTask extends Task<Pair<String, Route>> {
         private final int speed;
         private final double costParameter;

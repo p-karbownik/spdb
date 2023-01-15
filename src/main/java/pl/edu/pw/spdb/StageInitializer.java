@@ -12,6 +12,9 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
+/***
+ * Klasa wiążąca kontekst aplikacji z biblioteką JavaFX
+ */
 @Component
 public class StageInitializer implements ApplicationListener<ClientUI.StageReadyEvent> {
 
