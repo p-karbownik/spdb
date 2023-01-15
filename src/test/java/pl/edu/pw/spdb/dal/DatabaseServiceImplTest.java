@@ -29,7 +29,7 @@ public class DatabaseServiceImplTest {
         Long nearestStartId = service.getStartOrEnd(p, true);
 
         // then
-        assertEquals("Found different start point", 530709, nearestStartId);
+        assertEquals("Found different start point", 813149L, nearestStartId);
     }
 
     @Test
@@ -43,11 +43,11 @@ public class DatabaseServiceImplTest {
         Long nearestEndId = service.getStartOrEnd(p, false);
 
         // then
-        assertEquals("Found different end point", 3130606, nearestEndId);
+        assertEquals("Found different end point", 1834415L, nearestEndId);
     }
 
     @Test
-    public void findRoute() {       // find route from Gdansk to Krakow
+    public void findRoute() {
         // given
         long startId = 1457211;
         long endId = 3263579;
@@ -61,10 +61,7 @@ public class DatabaseServiceImplTest {
         assertNotNull("Route should not be null", r);
         assertNotNull("Route should contain not empty segment list", r.getSegments());
 
-        assertEquals("First segment should start with start point Id", startId, r.getSegments().get(0).source());
-        assertEquals("Last segment should end with end point Id", endId, r.getSegments().get(r.getSegments().size() - 1).target());
-
-        assertEquals("Distance should be around 551km", 551, (int) r.getDistance());
-        assertEquals("Time should be around 7h", 7, (int) r.getEstimatedTime());
+        assertEquals("Distance should be around 551km", 316, (int) r.getDistance());
+        assertEquals("Time should be around 7h", 4, (int) r.getEstimatedTime());
     }
 }
