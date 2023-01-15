@@ -8,6 +8,9 @@ import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ConfigurableApplicationContext;
 import pl.edu.pw.spdb.controller.MainWindowController;
 
+/***
+ * Klasa definująca kod, który ma się wykonać podczas uruchamiania i zamykania aplikacji
+ */
 public class ClientUI extends Application {
 
     private ConfigurableApplicationContext applicationContext;
