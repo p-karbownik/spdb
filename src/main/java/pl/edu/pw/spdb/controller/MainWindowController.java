@@ -346,9 +346,9 @@ public class MainWindowController implements Initializable {
     }
 
     private String getEstimatedTimeString(double time) {
-        BigDecimal bigDecimal = new BigDecimal(String.valueOf(time));
-        int hours = bigDecimal.intValue();
-        int minutes = (int) bigDecimal.subtract(new BigDecimal(hours)).doubleValue() * 60;
+        int hours = (int) time;
+        double minutesD = (time - hours) * 60 ;
+        int minutes = (int) minutesD;
 
         return hours + "godzin " + minutes + "minut";
     }
