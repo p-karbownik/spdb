@@ -69,7 +69,8 @@ public class DatabaseServiceImpl implements DatabaseService {
             statement.setDouble(2, point.longitude());
             log.info(statement.toString());
 
-            ResultSet result = statement.executeQuery();
+            ResultSet result = executeStatement(statement);
+
             if (result.next()) {
                 long id = result.getInt("source");
                 log.info("Received id: " + id);
@@ -85,13 +86,13 @@ public class DatabaseServiceImpl implements DatabaseService {
     }
 
     @Override
-    public Route findRoute(long startId, long endId, Integer maxSpeed, float distanceWeight) throws RuntimeException{
+    public Route findRoute(long startId, long endId, Integer maxSpeed, float distanceWeight) throws RuntimeException {
         try (Connection connection = getConnection()) {
             PreparedStatement statement = getStatement(startId, endId, maxSpeed, distanceWeight, connection);
 
             log.info(statement.toString());
 
-            ResultSet result = statement.executeQuery();
+            ResultSet result = executeStatement(statement);
 
             return parseQueryResult(result, maxSpeed);
 
@@ -99,6 +100,16 @@ public class DatabaseServiceImpl implements DatabaseService {
             log.error("SQLException has occurred with message: " + e.getMessage());
             throw new RuntimeException(e);
         }
+    }
+
+    private ResultSet executeStatement(PreparedStatement statement) throws SQLException {
+        long start = System.currentTimeMillis();
+        ResultSet result = statement.executeQuery();
+        long end = System.currentTimeMillis();
+        long time = end - start;
+        log.info("Query executed in " + time / 1000 + " seconds");
+
+        return result;
     }
 
     private Route parseQueryResult(ResultSet result, int maxSpeed) throws SQLException {
@@ -115,5 +126,4 @@ public class DatabaseServiceImpl implements DatabaseService {
         log.info("Segments number: " + segments.size());
         return new Route(segments, distanceSum, timeSum);
     }
-
 }
